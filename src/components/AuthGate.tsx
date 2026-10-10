@@ -3,6 +3,7 @@ import type { Session, User } from '@supabase/supabase-js';
 import { INITIAL_ALL_TIMETABLES, INITIAL_CLASSES, INITIAL_SUBJECTS, INITIAL_TEACHERS } from '../data/mockData.ts';
 import { isSupabaseConfigured, supabase } from '../lib/supabase.ts';
 import type { WorkspacePayload, WorkspaceRecord } from '../types/workspace.ts';
+import { getVietnameseErrorMessage } from '../utils/errorMessages.ts';
 import App from '../App.tsx';
 
 interface MembershipRecord {
@@ -49,7 +50,7 @@ export const AuthGate = () => {
     if (queryError) {
       setError(queryError.message.includes('relation')
         ? 'Chưa cài cơ sở dữ liệu. Hãy chạy migration Supabase trong thư mục supabase/migrations.'
-        : queryError.message);
+        : getVietnameseErrorMessage(queryError, 'Không thể tải workspace. Vui lòng thử tải lại trang.'));
       setWorkspace(null);
       setRole(null);
       setLoading(false);
@@ -107,7 +108,9 @@ export const AuthGate = () => {
 
     setBusy(false);
     if (result.error) {
-      setError(result.error.message);
+      setError(getVietnameseErrorMessage(result.error, isSignUp
+        ? 'Chưa thể tạo tài khoản. Vui lòng kiểm tra thông tin và thử lại.'
+        : 'Chưa thể đăng nhập. Vui lòng thử lại sau.'));
       return;
     }
     if (isSignUp && !result.data.session) {
@@ -126,7 +129,7 @@ export const AuthGate = () => {
     });
     setBusy(false);
     if (resetError) {
-      setError(resetError.message);
+      setError(getVietnameseErrorMessage(resetError, 'Chưa thể gửi email khôi phục. Vui lòng thử lại sau.'));
       return;
     }
     setNotice('Nếu email này đã đăng ký, Supabase sẽ gửi link đặt lại mật khẩu. Hãy kiểm tra cả thư mục Spam.');
@@ -144,7 +147,7 @@ export const AuthGate = () => {
     const { error: updateError } = await supabase.auth.updateUser({ password: newPassword });
     setBusy(false);
     if (updateError) {
-      setError(updateError.message);
+      setError(getVietnameseErrorMessage(updateError, 'Chưa thể cập nhật mật khẩu. Vui lòng thử lại.'));
       return;
     }
     setIsPasswordRecovery(false);
@@ -166,7 +169,7 @@ export const AuthGate = () => {
     });
 
     if (createError) {
-      setError(createError.message);
+      setError(getVietnameseErrorMessage(createError, 'Chưa thể tạo workspace. Vui lòng thử lại sau.'));
       setBusy(false);
       return;
     }
@@ -182,7 +185,7 @@ export const AuthGate = () => {
       member_email: memberEmail.trim(),
     });
     if (inviteError) {
-      setError(inviteError.message);
+      setError(getVietnameseErrorMessage(inviteError, 'Chưa thể thêm thành viên. Vui lòng kiểm tra email và thử lại.'));
       return false;
     }
     setNotice(`Đã thêm ${memberEmail} vào workspace. Người này cần có tài khoản EduFlow trước.`);

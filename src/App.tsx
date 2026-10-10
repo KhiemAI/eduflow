@@ -45,6 +45,7 @@ import { UserCheck, X, Search, Check, Sparkles, RotateCcw } from 'lucide-react';
 import type { WorkspaceRecord } from './types/workspace.ts';
 import { supabase } from './lib/supabase.ts';
 import { ChangePasswordModal } from './components/ChangePasswordModal.tsx';
+import { getVietnameseErrorMessage } from './utils/errorMessages.ts';
 
 interface AppProps {
   workspaceId: string;
@@ -334,7 +335,7 @@ export default function App(props: AppProps) {
   const handleChangePassword = async (newPassword: string) => {
     if (!supabase) return 'Không kết nối được Supabase.';
     const { error } = await supabase.auth.updateUser({ password: newPassword });
-    if (error) return error.message;
+    if (error) return getVietnameseErrorMessage(error, 'Chưa thể cập nhật mật khẩu. Vui lòng thử lại.');
 
     showToast('Đã đổi mật khẩu thành công.');
     return null;
