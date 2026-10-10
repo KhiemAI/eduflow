@@ -33,6 +33,10 @@ export const AuthGate = () => {
   const [password, setPassword] = useState('');
   const [schoolName, setSchoolName] = useState('');
   const [isSignUp, setIsSignUp] = useState(false);
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
+  const [isPasswordRecovery, setIsPasswordRecovery] = useState(() => window.location.hash.includes('type=recovery'));
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmNewPassword, setConfirmNewPassword] = useState('');
 
   const loadWorkspace = async (user: User) => {
     if (!supabase) return;
@@ -74,8 +78,9 @@ export const AuthGate = () => {
       else setLoading(false);
     });
 
-    const { data: authListener } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, nextSession) => {
       setSession(nextSession);
+      if (event === 'PASSWORD_RECOVERY') setIsPasswordRecovery(true);
       if (nextSession) {
         setLoading(true);
         window.setTimeout(() => void loadWorkspace(nextSession.user), 0);
@@ -108,6 +113,45 @@ export const AuthGate = () => {
     if (isSignUp && !result.data.session) {
       setNotice('Tài khoản đã tạo. Hãy xác nhận email, sau đó đăng nhập để tiếp tục.');
     }
+  };
+
+  const handleRequestPasswordReset = async (event: FormEvent) => {
+    event.preventDefault();
+    if (!supabase) return;
+    setBusy(true);
+    setError('');
+    setNotice('');
+    const { error: resetError } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+      redirectTo: window.location.origin,
+    });
+    setBusy(false);
+    if (resetError) {
+      setError(resetError.message);
+      return;
+    }
+    setNotice('Nếu email này đã đăng ký, Supabase sẽ gửi link đặt lại mật khẩu. Hãy kiểm tra cả thư mục Spam.');
+  };
+
+  const handleSetRecoveredPassword = async (event: FormEvent) => {
+    event.preventDefault();
+    if (!supabase) return;
+    if (newPassword !== confirmNewPassword) {
+      setError('Mật khẩu nhập lại không khớp.');
+      return;
+    }
+    setBusy(true);
+    setError('');
+    const { error: updateError } = await supabase.auth.updateUser({ password: newPassword });
+    setBusy(false);
+    if (updateError) {
+      setError(updateError.message);
+      return;
+    }
+    setIsPasswordRecovery(false);
+    setNewPassword('');
+    setConfirmNewPassword('');
+    window.history.replaceState({}, document.title, window.location.pathname + window.location.search);
+    setNotice('Đã đặt lại mật khẩu. Bạn có thể tiếp tục sử dụng EduFlow.');
   };
 
   const handleCreateWorkspace = async (event: FormEvent) => {
@@ -158,7 +202,38 @@ export const AuthGate = () => {
     return <AuthLayout><p className="text-sm font-semibold text-slate-600">Đang kết nối EduFlow...</p></AuthLayout>;
   }
 
+  if (isPasswordRecovery && session) {
+    return (
+      <AuthLayout>
+        <p className="text-xs font-bold uppercase tracking-widest text-blue-700">EduFlow Workspace</p>
+        <h1 className="mt-2 text-2xl font-black text-slate-900">Đặt mật khẩu mới</h1>
+        <form onSubmit={handleSetRecoveredPassword} className="mt-6 space-y-3">
+          <input required minLength={8} type="password" autoComplete="new-password" value={newPassword} onChange={event => setNewPassword(event.target.value)} placeholder="Mật khẩu mới (ít nhất 8 ký tự)" className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-blue-500" />
+          <input required minLength={8} type="password" autoComplete="new-password" value={confirmNewPassword} onChange={event => setConfirmNewPassword(event.target.value)} placeholder="Nhập lại mật khẩu mới" className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-blue-500" />
+          <button disabled={busy} className="w-full rounded-lg bg-blue-700 px-4 py-2.5 text-sm font-bold text-white disabled:opacity-60">{busy ? 'Đang cập nhật...' : 'Lưu mật khẩu mới'}</button>
+        </form>
+        <StatusMessage error={error} notice={notice} />
+      </AuthLayout>
+    );
+  }
+
   if (!session) {
+    if (isForgotPassword) {
+      return (
+        <AuthLayout>
+          <p className="text-xs font-bold uppercase tracking-widest text-blue-700">EduFlow Workspace</p>
+          <h1 className="mt-2 text-2xl font-black text-slate-900">Khôi phục mật khẩu</h1>
+          <p className="mt-2 text-sm text-slate-600">Nhập email tài khoản để nhận link đặt mật khẩu mới.</p>
+          <form onSubmit={handleRequestPasswordReset} className="mt-6 space-y-3">
+            <input required type="email" autoComplete="email" value={email} onChange={event => setEmail(event.target.value)} placeholder="Email" className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-blue-500" />
+            <button disabled={busy} className="w-full rounded-lg bg-blue-700 px-4 py-2.5 text-sm font-bold text-white disabled:opacity-60">{busy ? 'Đang gửi...' : 'Gửi link khôi phục'}</button>
+          </form>
+          <button onClick={() => { setIsForgotPassword(false); setError(''); setNotice(''); }} className="mt-4 text-sm font-semibold text-blue-700">Quay lại đăng nhập</button>
+          <StatusMessage error={error} notice={notice} />
+        </AuthLayout>
+      );
+    }
+
     return (
       <AuthLayout>
         <p className="text-xs font-bold uppercase tracking-widest text-blue-700">EduFlow Workspace</p>
@@ -170,6 +245,7 @@ export const AuthGate = () => {
           <button disabled={busy} className="w-full rounded-lg bg-blue-700 px-4 py-2.5 text-sm font-bold text-white disabled:opacity-60">{busy ? 'Đang xử lý...' : isSignUp ? 'Đăng ký' : 'Đăng nhập'}</button>
         </form>
         <button onClick={() => { setIsSignUp(!isSignUp); setError(''); setNotice(''); }} className="mt-4 text-sm font-semibold text-blue-700">{isSignUp ? 'Đã có tài khoản? Đăng nhập' : 'Chưa có tài khoản? Đăng ký'}</button>
+        {!isSignUp && <button onClick={() => { setIsForgotPassword(true); setError(''); setNotice(''); }} className="ml-4 mt-4 text-sm font-semibold text-slate-600">Quên mật khẩu?</button>}
         <StatusMessage error={error} notice={notice} />
       </AuthLayout>
     );

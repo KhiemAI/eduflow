@@ -16,7 +16,8 @@ import {
   Sparkles,
   Trash2,
   UserPlus,
-  LogOut
+  LogOut,
+  KeyRound
 } from 'lucide-react';
 import { SchoolClass, TabType } from '../types/index.ts';
 
@@ -44,6 +45,7 @@ interface HeaderProps {
   userEmail: string;
   memberRole: 'admin' | 'editor';
   onInviteMember: () => void;
+  onChangePassword: () => void;
   onLogout: () => void;
 }
 
@@ -71,6 +73,7 @@ export const Header: React.FC<HeaderProps> = ({
   userEmail,
   memberRole,
   onInviteMember,
+  onChangePassword,
   onLogout,
 }) => {
   const filteredClasses = classes.filter(c => c.grade === selectedGrade);
@@ -323,6 +326,9 @@ export const Header: React.FC<HeaderProps> = ({
               <UserPlus className="w-4 h-4" />
             </button>
           )}
+          <button onClick={onChangePassword} className="p-1.5 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100" title="Đổi mật khẩu" aria-label="Đổi mật khẩu">
+            <KeyRound className="w-4 h-4" />
+          </button>
           <button onClick={onLogout} className="p-1.5 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200" title={`Đăng xuất ${userEmail}`} aria-label="Đăng xuất">
             <LogOut className="w-4 h-4" />
           </button>

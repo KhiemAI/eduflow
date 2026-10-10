@@ -44,6 +44,7 @@ import { scanDataHealth, CleaningSummary } from './utils/dataCleaner.ts';
 import { UserCheck, X, Search, Check, Sparkles, RotateCcw } from 'lucide-react';
 import type { WorkspaceRecord } from './types/workspace.ts';
 import { supabase } from './lib/supabase.ts';
+import { ChangePasswordModal } from './components/ChangePasswordModal.tsx';
 
 interface AppProps {
   workspaceId: string;
@@ -253,6 +254,7 @@ export default function App(props: AppProps) {
 
   // Modals state
   const [isPrintOpen, setIsPrintOpen] = useState(false);
+  const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
   const [printModalMode, setPrintModalMode] = useState<PrintMode>('all_classes');
   const [quickAddSlot, setQuickAddSlot] = useState<{ day: number; session: SessionType; period: number } | null>(null);
 
@@ -327,6 +329,15 @@ export default function App(props: AppProps) {
     if (await onInviteMember(memberEmail)) {
       showToast(`Đã mời ${memberEmail.trim()} vào workspace.`);
     }
+  };
+
+  const handleChangePassword = async (newPassword: string) => {
+    if (!supabase) return 'Không kết nối được Supabase.';
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    if (error) return error.message;
+
+    showToast('Đã đổi mật khẩu thành công.');
+    return null;
   };
 
   // Reset to original demo data
@@ -865,6 +876,7 @@ export default function App(props: AppProps) {
           userEmail={userEmail}
           memberRole={memberRole}
           onInviteMember={() => void handleInviteMember()}
+          onChangePassword={() => setIsChangePasswordOpen(true)}
           onLogout={onLogout}
           onPrint={() => {
             setPrintModalMode('single');
@@ -1026,6 +1038,14 @@ export default function App(props: AppProps) {
           />
         )}
       </main>
+
+      {/* Substitute Teacher Modal */}
+      <ChangePasswordModal
+        isOpen={isChangePasswordOpen}
+        email={userEmail}
+        onClose={() => setIsChangePasswordOpen(false)}
+        onSubmit={handleChangePassword}
+      />
 
       {/* Substitute Teacher Modal */}
       <SubstituteModal

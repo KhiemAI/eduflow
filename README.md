@@ -16,6 +16,8 @@ EduFlow is a React, TypeScript, and Vite timetable manager. Shared school data, 
 
 5. Register the first account and create the school's workspace. New members must register first; an admin can then add their email with the person-plus button. Invited users can select **Kiểm tra lời mời** after signing in.
 
+Workspace members can change a password from the key icon in the app header. The sign-in screen also has a password recovery flow; its email delivery depends on Supabase Auth SMTP settings and its redirect URL must be allow-listed in Authentication > URL Configuration. Supabase's default SMTP is rate-limited and intended for testing; configure custom SMTP before relying on recovery emails for all teachers.
+
 ## Deploy to Vercel
 
 Import the GitHub repository into Vercel. Use the default Vite settings:
