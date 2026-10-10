@@ -241,7 +241,6 @@ export const AuthGate = () => {
       <AuthLayout>
         <p className="text-xs font-bold uppercase tracking-widest text-blue-700">EduFlow Workspace</p>
         <h1 className="mt-2 text-2xl font-black text-slate-900">{isSignUp ? 'Tạo tài khoản' : 'Đăng nhập'}</h1>
-        <p className="mt-2 text-sm text-slate-600">Dữ liệu trường được lưu trên Supabase và đồng bộ giữa các thành viên.</p>
         <form onSubmit={handleAuth} className="mt-6 space-y-3">
           <input required type="email" autoComplete="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="Email" className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-blue-500" />
           <input required minLength={6} type="password" autoComplete={isSignUp ? 'new-password' : 'current-password'} value={password} onChange={e => setPassword(e.target.value)} placeholder="Mật khẩu (ít nhất 6 ký tự)" className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-blue-500" />
