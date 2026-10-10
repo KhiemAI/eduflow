@@ -1,0 +1,8 @@
+{
+  "name": "Remix EduFlow - Quản lý Thời khóa biểu",
+  "description": "Hệ thống quản lý và xếp thời khóa biểu thông minh cho trường THPT/THCS với tính năng kéo thả, phát hiện trùng lịch giáo viên, và đề xuất dạy thay.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
